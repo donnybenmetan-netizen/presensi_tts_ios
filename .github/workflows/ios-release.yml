@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
     - uses: actions/checkout@v4
@@ -19,12 +21,19 @@ jobs:
     - name: Get Dependencies
       run: flutter pub get
 
-    - name: Build IPA (Unsigned)
+    - name: Build iOS App
       run: |
-        flutter build ipa --no-codesign
+        flutter build ios --release --no-codesign
+
+    - name: Create IPA payload
+      run: |
+        mkdir -p build/ios/iphoneos/Payload
+        mv build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+        cd build/ios/iphoneos
+        zip -r app-release.ipa Payload/
 
     - name: Upload IPA Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ios-release-ipa
-        path: build/ios/ipa/*.ipa
+        path: build/ios/iphoneos/app-release.ipa
